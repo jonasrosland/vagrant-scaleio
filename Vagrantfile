@@ -26,6 +26,7 @@ Vagrant.configure("2") do |config|
     end
     mdm1.vm.box = "centos_6.4"
     mdm1.vm.network "private_network", ip: "192.168.50.11"
+    mdm1.vm.network :forwarded_port, host: 6611, guest: 6611
     mdm1.vm.hostname = "mdm1"
     mdm1.vm.provision "shell",
       inline: "truncate -s 100GB /home/vagrant/scaleio1 && yum install numactl python-paramiko -y && mkdir -p /opt/scaleio/siinstall && cp /vagrant/ECS-1.20-0.357.el6-install /opt/scaleio/siinstall && cd /opt/scaleio/siinstall && bash ECS-1.20-0.357.el6-install && rpm -Uvh /opt/scaleio/siinstall/ECS/packages/ecs-mdm-1.20-0.357.el6.x86_64.rpm && rpm -Uvh /opt/scaleio/siinstall/ECS/packages/ecs-sds-1.20-0.357.el6.x86_64.rpm && MDM_IP=192.168.50.10 rpm -Uvh /opt/scaleio/siinstall/ECS/packages/ecs-sdc-1.20-0.357.el6.x86_64.rpm && scli --mdm --add_primary_mdm --interface_name eth0 --virtual_ip 192.168.50.10 --primary_mdm_ip 192.168.50.11 --accept_license"
