@@ -77,6 +77,7 @@ Vagrant.configure("2") do |config|
 
       if node[:hostname] == "mdm1"
         node_config.vm.network "private_network", ip: "#{firstmdmip}"
+        node_config.vm.network "forwarded_port", guest: 6611, host: 6611
         node_config.vm.provision "shell",
           inline: "echo 'export GATEWAY_ADMIN_PASSWORD=#{password}' >> ~/.profile"
         node_config.vm.provision "shell",
