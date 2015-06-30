@@ -52,7 +52,7 @@ echo SECONDMDMIP    = "${SECONDMDMIP}"
 echo CLUSTERINSTALL = "${CLUSTERINSTALL}"
 #echo "Number files in SEARCH PATH with EXTENSION:" $(ls -1 "${SEARCHPATH}"/*."${EXTENSION}" | wc -l)
 truncate -s 100GB ${DEVICE}
-yum install numactl libaio wget -y
+yum install numactl libaio wget unzip -y
 # install docker experimental
 wget -nv https://get.docker.com/rpm/1.7.0/centos-7/RPMS/x86_64/docker-engine-1.7.0-1.el7.centos.x86_64.rpm -O /tmp/docker.rpm
 yum install /tmp/docker.rpm -y
@@ -80,7 +80,7 @@ echo 'GOSCALEIO_SYSTEM=cluster1' >> /etc/environment
 echo 'GOSCALEIO_PROTECTIONDOMAIN=pdomain' >> /etc/environment
 echo 'GOSCALEIO_STORAGEPOOL=pool1' >> /etc/environment
 systemctl daemon-reload
-systemctl start rexray.service
+
 cd /vagrant
 wget -nv ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_RHEL6_Download.zip -O ScaleIO_RHEL6_Download.zip
 unzip -o ScaleIO_RHEL6_Download.zip -d /vagrant/scaleio/
@@ -92,6 +92,7 @@ if [ "${CLUSTERINSTALL}" == "True" ]; then
   MDM_IP=${FIRSTMDMIP},${SECONDMDMIP} rpm -Uv ${PACKAGENAME}-sdc-${VERSION}.${OS}.x86_64.rpm
 fi
 
+systemctl restart rexray.service
 if [[ -n $1 ]]; then
   echo "Last line of file specified as non-opt/last argument:"
   tail -1 $1

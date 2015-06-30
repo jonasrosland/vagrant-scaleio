@@ -85,7 +85,7 @@ echo 'GOSCALEIO_SYSTEM=cluster1' >> /etc/environment
 echo 'GOSCALEIO_PROTECTIONDOMAIN=pdomain' >> /etc/environment
 echo 'GOSCALEIO_STORAGEPOOL=pool1' >> /etc/environment
 systemctl daemon-reload
-systemctl start rexray.service
+
 cd /vagrant/scaleio/ScaleIO_1.32_RHEL7_Download
 
 # Always install ScaleIO IM
@@ -101,7 +101,7 @@ fi
 
 sed -i 's/mdm.ip.addresses=/mdm.ip.addresses='${FIRSTMDMIP}','${SECONDMDMIP}'/' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties
 service scaleio-gateway restart
-
+systemctl restart rexray.service
 if [[ -n $1 ]]; then
   echo "Last line of file specified as non-opt/last argument:"
   tail -1 $1

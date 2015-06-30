@@ -91,7 +91,6 @@ echo 'GOSCALEIO_SYSTEM=cluster1' >> /etc/environment
 echo 'GOSCALEIO_PROTECTIONDOMAIN=pdomain' >> /etc/environment
 echo 'GOSCALEIO_STORAGEPOOL=pool1' >> /etc/environment
 systemctl daemon-reload
-systemctl start rexray.service
 cd /vagrant/scaleio/ScaleIO_1.32_RHEL7_Download
 
 if [ "${CLUSTERINSTALL}" == "True" ]; then
@@ -119,7 +118,7 @@ if [ "${CLUSTERINSTALL}" == "True" ]; then
   scli --mdm_ip ${FIRSTMDMIP} --rename_system --new_name cluster1
 fi
 
-
+systemctl restart rexray.service
 if [[ -n $1 ]]; then
   echo "Last line of file specified as non-opt/last argument:"
   tail -1 $1
