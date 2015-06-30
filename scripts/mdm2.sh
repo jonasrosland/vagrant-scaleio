@@ -111,7 +111,7 @@ ExecStart=/bin/rexray --daemon
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 Restart=always
-RestartSec=1
+StartLimitInterval=0
 [Install]
 WantedBy=docker.service' >> /usr/lib/systemd/system/rexray.service
 echo 'GOSCALEIO_ENDPOINT=https://192.168.50.12/api' >> /etc/environment
