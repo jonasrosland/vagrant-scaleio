@@ -58,11 +58,39 @@ echo CLUSTERINSTALL     = "${CLUSTERINSTALL}"
 truncate -s 100GB ${DEVICE}
 yum install numactl libaio -y
 yum install java-1.7.0-openjdk -y
-cd /vagrant/scaleio/ScaleIO_1.32_RHEL6_Download
+# install docker experimental
+wget -nv https://get.docker.com/rpm/1.7.0/centos-7/RPMS/x86_64/docker-engine-1.7.0-1.el7.centos.x86_64.rpm -O /tmp/docker.rpm
+yum install /tmp/docker.rpm -y
+wget -nv https://experimental.docker.com/builds/Linux/x86_64/docker-latest -O /bin/docker
+systemctl restart docker
+# install rexray
+wget -nv https://github.com/emccode/rexraycli/releases/download/latest/rexray-Linux-x86_64 -O /bin/rexray
+chmod +x /bin/rexray
+echo '[Unit]
+Description=Start Rex-RAY Service
+Before=docker.service
+[Service]
+EnvironmentFile=/etc/environment
+ExecStart=/bin/rexray --daemon
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+[Install]
+WantedBy=docker.service' >> /usr/lib/systemd/system/rexray.service
+echo 'GOSCALEIO_ENDPOINT=https://192.168.50.12/api' >> /etc/environment
+echo 'GOSCALEIO_INSECURE=true' >> /etc/environment
+echo 'GOSCALEIO_USERNAME=admin' >> /etc/environment
+echo 'GOSCALEIO_PASSWORD=Scaleio123' >> /etc/environment
+echo 'GOSCALEIO_SYSTEM=cluster1' >> /etc/environment
+echo 'GOSCALEIO_PROTECTIONDOMAIN=pdomain' >> /etc/environment
+echo 'GOSCALEIO_STORAGEPOOL=pool1' >> /etc/environment
+systemctl daemon-reload
+systemctl start rexray.service
+cd /vagrant/scaleio/ScaleIO_1.32_RHEL7_Download
 
 # Always install ScaleIO IM
-#export GATEWAY_ADMIN_PASSWORD=${PASSWORD}
-#rpm -Uv ${PACKAGENAME}-gateway-${VERSION}.noarch.rpm
+export GATEWAY_ADMIN_PASSWORD=${PASSWORD}
+rpm -Uv /vagrant/scaleio/ScaleIO_1.32_Gateway_for_Linux_Download/${PACKAGENAME}-gateway-${VERSION}.noarch.rpm
 
 if [ "${CLUSTERINSTALL}" == "True" ]; then
   rpm -Uv ${PACKAGENAME}-mdm-${VERSION}.${OS}.x86_64.rpm
@@ -71,8 +99,8 @@ if [ "${CLUSTERINSTALL}" == "True" ]; then
   scli --mdm --add_primary_mdm --primary_mdm_ip ${FIRSTMDMIP} --accept_license
 fi
 
-#sed -i 's/mdm.ip.addresses=/mdm.ip.addresses='${FIRSTMDMIP}','${SECONDMDMIP}'/' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties
-#service scaleio-gateway restart
+sed -i 's/mdm.ip.addresses=/mdm.ip.addresses='${FIRSTMDMIP}','${SECONDMDMIP}'/' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties
+service scaleio-gateway restart
 
 if [[ -n $1 ]]; then
   echo "Last line of file specified as non-opt/last argument:"
