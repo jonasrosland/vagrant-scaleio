@@ -75,7 +75,7 @@ Vagrant.configure("2") do |config|
       node_config.vm.box = "#{vagrantbox}"
       node_config.vm.host_name = "#{node[:hostname]}.#{domain}"
       node_config.vm.provider :virtualbox do |vb|
-        vb.customize ["modifyvm", :id, "--memory", "1024"]
+        vb.customize ["modifyvm", :id, "--memory", "2048"]
       end
       if node[:hostname] == "tb"
         node_config.vm.network "private_network", ip: "#{tbip}"

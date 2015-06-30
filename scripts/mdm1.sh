@@ -61,7 +61,10 @@ yum install java-1.7.0-openjdk -y
 # install docker experimental
 wget -nv https://get.docker.com/rpm/1.7.0/centos-7/RPMS/x86_64/docker-engine-1.7.0-1.el7.centos.x86_64.rpm -O /tmp/docker.rpm
 yum install /tmp/docker.rpm -y
+systemctl stop docker
+rm -Rf /var/lib/docker
 wget -nv https://experimental.docker.com/builds/Linux/x86_64/docker-latest -O /bin/docker
+sed -i -e "s/^OPTIONS=/#OPTIONS=/g" /etc/sysconfig/docker
 systemctl restart docker
 # install rexray
 wget -nv https://github.com/emccode/rexraycli/releases/download/latest/rexray-Linux-x86_64 -O /bin/rexray
@@ -74,7 +77,8 @@ EnvironmentFile=/etc/environment
 ExecStart=/bin/rexray --daemon
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
-Restart=on-failure
+Restart=always
+RestartSec=1
 [Install]
 WantedBy=docker.service' >> /usr/lib/systemd/system/rexray.service
 echo 'GOSCALEIO_ENDPOINT=https://192.168.50.12/api' >> /etc/environment
