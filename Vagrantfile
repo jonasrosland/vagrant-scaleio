@@ -54,6 +54,7 @@ Vagrant.configure("2") do |config|
         vb.customize ["modifyvm", :id, "--memory", "1024"]
       end
       node_config.vm.network "private_network", ip: "#{node[:ipaddress]}"
+      node_config.vm.provision "update", type: "shell", path: "scripts/update.sh"
 
       if node[:type] == "tb"
         node_config.vm.provision "download", type: "shell", path: "scripts/download.sh"
