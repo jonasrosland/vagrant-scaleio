@@ -4,20 +4,8 @@ do
   key="$1"
 
   case $key in
-    -o|--os)
-    OS="$2"
-    shift
-    ;;
     -d|--device)
     DEVICE="$2"
-    shift
-    ;;
-    -i|--installpath)
-    INSTALLPATH="$2"
-    shift
-    ;;
-    -v|--version)
-    VERSION="$2"
     shift
     ;;
     -n|--packagename)
@@ -56,9 +44,6 @@ do
 done
 
 echo DEVICE  = "${DEVICE}"
-echo INSTALL PATH     = "${INSTALLPATH}"
-echo VERSION    = "${VERSION}"
-echo OS    = "${OS}"
 echo PACKAGENAME    = "${PACKAGENAME}"
 echo FIRSTMDMIP    = "${FIRSTMDMIP}"
 echo SECONDMDMIP    = "${SECONDMDMIP}"
@@ -68,25 +53,36 @@ echo CLUSTERINSTALL   =  "${CLUSTERINSTALL}"
 
 #echo "Number files in SEARCH PATH with EXTENSION:" $(ls -1 "${SEARCHPATH}"/*."${EXTENSION}" | wc -l)
 truncate -s 100GB ${DEVICE}
-yum install numactl libaio -y
-cd /vagrant/scaleio/ScaleIO_1.32_RHEL6_Download
+
+case "$(uname -r)" in
+  *el6*)
+    sysctl -p kernel.shmmax=209715200
+    yum install numactl libaio -y
+    cd /vagrant/scaleio/ScaleIO_1.32_RHEL6_Download
+    ;;
+  *el7*)
+    yum install numactl libaio -y
+    cd /vagrant/scaleio/ScaleIO_1.32_RHEL7_Download
+    ;;
+esac
 
 if [ "${CLUSTERINSTALL}" == "True" ]; then
 
-  rpm -Uv ${PACKAGENAME}-sds-${VERSION}.${OS}.x86_64.rpm
-  MDM_IP=${FIRSTMDMIP},${SECONDMDIP} rpm -Uv ${PACKAGENAME}-sdc-${VERSION}.${OS}.x86_64.rpm
+  rpm -Uv ${PACKAGENAME}-sds-*.x86_64.rpm
+  MDM_IP=${FIRSTMDMIP},${SECONDMDMIP} rpm -Uv ${PACKAGENAME}-sdc-*.x86_64.rpm
 
   case ${TYPE} in
   "tb")
-      rpm -Uv ${PACKAGENAME}-tb-${VERSION}.${OS}.x86_64.rpm
+      rpm -Uv ${PACKAGENAME}-tb-*.x86_64.rpm
       ;;
 
   "mdm1")
-      rpm -Uv ${PACKAGENAME}-mdm-${VERSION}.${OS}.x86_64.rpm
+      rpm -Uv ${PACKAGENAME}-mdm-*.x86_64.rpm
       scli --mdm --add_primary_mdm --primary_mdm_ip ${FIRSTMDMIP} --accept_license
       ;;
+
   "mdm2")
-      rpm -Uv ${PACKAGENAME}-mdm-${VERSION}.${OS}.x86_64.rpm
+      rpm -Uv ${PACKAGENAME}-mdm-*.x86_64.rpm
       scli --login --mdm_ip ${FIRSTMDMIP} --username admin --password admin
       scli --mdm_ip ${FIRSTMDMIP} --set_password --old_password admin --new_password ${PASSWORD}
       scli --mdm_ip ${FIRSTMDMIP} --login --username admin --password ${PASSWORD}
@@ -104,9 +100,10 @@ if [ "${CLUSTERINSTALL}" == "True" ]; then
       scli --map_volume_to_sdc --mdm_ip ${FIRSTMDMIP} --volume_name vol1 --sdc_ip ${FIRSTMDMIP} --allow_multi_map
       scli --map_volume_to_sdc --mdm_ip ${FIRSTMDMIP} --volume_name vol1 --sdc_ip ${SECONDMDMIP} --allow_multi_map
       scli --map_volume_to_sdc --mdm_ip ${FIRSTMDMIP} --volume_name vol1 --sdc_ip ${TBIP} --allow_multi_map
-
-      scli --mdm_ip ${FIRSTMDMIP} --query_all
+      sleep 5
+      scli --mdm_ip ${FIRSTMDMIP},${SECONDMDMIP} --query_all
       ;;
+
     esac
 fi
 
