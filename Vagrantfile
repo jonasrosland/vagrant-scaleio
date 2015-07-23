@@ -14,17 +14,17 @@ secondmdmip = "#{network}.12"
 tbip = "#{network}.13"
 
 # modifiy hostnames if required
+# "scaleio-gw" is optional
+# "chef/centos-6.6" or "chef/centos-7.0" are supported boxes, also a mixed config
 nodes = [
-{hostname: "scaleio-tb", ipaddress: "#{tbip}", type: "tb", box: "chef/centos-6.6"},
-{hostname: 'scaleio-mdm1', ipaddress: "#{firstmdmip}", type: 'mdm1', box: "chef/centos-6.6"},
-{hostname: 'scaleio-mdm2', ipaddress: "#{secondmdmip}", type: 'mdm2', box: "chef/centos-7.0"}
+{hostname: "scaleio-tb", ipaddress: "#{tbip}", type: "tb", box: "chef/centos-6.6", memory: "1024"},
+{hostname: 'scaleio-mdm1', ipaddress: "#{firstmdmip}", type: 'mdm1', box: "chef/centos-6.6", memory: "1024"},
+{hostname: 'scaleio-mdm2', ipaddress: "#{secondmdmip}", type: 'mdm2', box: "chef/centos-7.0", memory: "1024"},
+{hostname: "scaleio-gw", ipaddress: "#{network}.14", type: "gw", box: "chef/centos-7.0", memory: "512"}
 ]
 
 # Install ScaleIO cluster automatically or IM only
 clusterinstall = "True" #If True a fully working ScaleIO cluster is installed. False mean only IM is installed on node MDM1.
-
-# package name, was ecs for 1.21, is now EMC-ScaleIO from 1.30
-packagename = "EMC-ScaleIO"
 
 # fake device
 device = "/home/vagrant/scaleio1"
@@ -36,7 +36,7 @@ Vagrant.configure("2") do |config|
       node_config.vm.box = "#{node[:box]}"
       node_config.vm.host_name = "#{node[:hostname]}.#{domain}"
       node_config.vm.provider :virtualbox do |vb|
-        vb.customize ["modifyvm", :id, "--memory", "1024"]
+        vb.customize ["modifyvm", :id, "--memory", "#{node[:memory]}"]
       end
       node_config.vm.network "private_network", ip: "#{node[:ipaddress]}"
       #node_config.vm.provision "update", type: "shell", path: "scripts/update.sh"
@@ -47,7 +47,7 @@ Vagrant.configure("2") do |config|
 
       node_config.vm.provision "shell" do |s|
         s.path = "scripts/install.sh"
-        s.args   = "-n #{packagename} -d #{device} -f #{firstmdmip} -s #{secondmdmip} -t #{tbip} -p #{password} -c #{clusterinstall} -x #{node[:type]}"
+        s.args   = "-d #{device} -f #{firstmdmip} -s #{secondmdmip} -t #{tbip} -p #{password} -c #{clusterinstall} -n #{node[:type]}"
       end
 
     end

@@ -8,10 +8,6 @@ do
     DEVICE="$2"
     shift
     ;;
-    -n|--packagename)
-    PACKAGENAME="$2"
-    shift
-    ;;
     -f|--firstmdmip)
     FIRSTMDMIP="$2"
     shift
@@ -32,7 +28,7 @@ do
     CLUSTERINSTALL="$2"
     shift
     ;;
-    -x|--nodetype)
+    -n|--nodetype)
     TYPE="$2"
     shift
     ;;
@@ -44,15 +40,11 @@ do
 done
 
 echo DEVICE  = "${DEVICE}"
-echo PACKAGENAME    = "${PACKAGENAME}"
 echo FIRSTMDMIP    = "${FIRSTMDMIP}"
 echo SECONDMDMIP    = "${SECONDMDMIP}"
 echo TBIP    = "${TBIP}"
 echo PASSWORD    = "${PASSWORD}"
 echo CLUSTERINSTALL   =  "${CLUSTERINSTALL}"
-
-#echo "Number files in SEARCH PATH with EXTENSION:" $(ls -1 "${SEARCHPATH}"/*."${EXTENSION}" | wc -l)
-truncate -s 100GB ${DEVICE}
 
 case "$(uname -r)" in
   *el6*)
@@ -68,21 +60,25 @@ esac
 
 if [ "${CLUSTERINSTALL}" == "True" ]; then
 
-  rpm -Uv ${PACKAGENAME}-sds-*.x86_64.rpm
-  MDM_IP=${FIRSTMDMIP},${SECONDMDMIP} rpm -Uv ${PACKAGENAME}-sdc-*.x86_64.rpm
+  if  [[ "tb mdm1 mdm2" = *${TYPE}* ]]; then
+    truncate -s 100GB ${DEVICE}
+    rpm -Uv EMC-ScaleIO-sds-*.x86_64.rpm
+    MDM_IP=${FIRSTMDMIP},${SECONDMDMIP} rpm -Uv EMC-ScaleIO-sdc-*.x86_64.rpm
+    Token=${PASSWORD} rpm -Uv EMC-ScaleIO-lia-*.x86_64.rpm
+  fi
 
   case ${TYPE} in
   "tb")
-      rpm -Uv ${PACKAGENAME}-tb-*.x86_64.rpm
+      rpm -Uv EMC-ScaleIO-tb-*.x86_64.rpm
       ;;
 
   "mdm1")
-      rpm -Uv ${PACKAGENAME}-mdm-*.x86_64.rpm
+      rpm -Uv EMC-ScaleIO-mdm-*.x86_64.rpm
       scli --mdm --add_primary_mdm --primary_mdm_ip ${FIRSTMDMIP} --accept_license
       ;;
 
   "mdm2")
-      rpm -Uv ${PACKAGENAME}-mdm-*.x86_64.rpm
+      rpm -Uv EMC-ScaleIO-mdm-*.x86_64.rpm
       scli --login --mdm_ip ${FIRSTMDMIP} --username admin --password admin
       scli --mdm_ip ${FIRSTMDMIP} --set_password --old_password admin --new_password ${PASSWORD}
       scli --mdm_ip ${FIRSTMDMIP} --login --username admin --password ${PASSWORD}
@@ -104,7 +100,29 @@ if [ "${CLUSTERINSTALL}" == "True" ]; then
       scli --mdm_ip ${FIRSTMDMIP},${SECONDMDMIP} --query_all
       ;;
 
+  "gw")
+      cd /vagrant/scaleio/ScaleIO_1.32_Gateway_for_Linux_Download
+      yum install java-1.7.0-openjdk -y
+      GATEWAY_ADMIN_PASSWORD=${PASSWORD} rpm -Uv EMC-ScaleIO-gateway-*.rpm
+      ;;
+
     esac
+else
+  case ${TYPE} in
+  "tb")
+      ;;
+
+  "mdm1")
+      cd /vagrant/scaleio/ScaleIO_1.32_Gateway_for_Linux_Download
+      yum install java-1.7.0-openjdk -y
+      GATEWAY_ADMIN_PASSWORD=${PASSWORD} rpm -Uv EMC-ScaleIO-gateway-*.rpm
+      ;;
+
+  "mdm2")
+
+      ;;
+  esac
+
 fi
 
 
