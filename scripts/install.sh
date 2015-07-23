@@ -109,17 +109,10 @@ if [ "${CLUSTERINSTALL}" == "True" ]; then
     esac
 else
   case ${TYPE} in
-  "tb")
-      ;;
-
   "mdm1")
       cd /vagrant/scaleio/ScaleIO_1.32_Gateway_for_Linux_Download
       yum install java-1.7.0-openjdk -y
       GATEWAY_ADMIN_PASSWORD=${PASSWORD} rpm -Uv EMC-ScaleIO-gateway-*.rpm
-      ;;
-
-  "mdm2")
-
       ;;
   esac
 

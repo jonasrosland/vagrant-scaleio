@@ -14,19 +14,19 @@ secondmdmip = "#{network}.12"
 tbip = "#{network}.13"
 
 # modifiy hostnames if required
-# "scaleio-gw" is optional
+# "scaleio-gw" is optional, additional nodes with any box is also possible (select type: "none")
 # "chef/centos-6.6" or "chef/centos-7.0" are supported boxes, also a mixed config
 nodes = [
-{hostname: "scaleio-tb", ipaddress: "#{tbip}", type: "tb", box: "chef/centos-6.6", memory: "1024"},
-{hostname: 'scaleio-mdm1', ipaddress: "#{firstmdmip}", type: 'mdm1', box: "chef/centos-6.6", memory: "1024"},
+{hostname: "scaleio-tb", ipaddress: "#{tbip}", type: "tb", box: "chef/centos-7.0", memory: "1024"},
+{hostname: 'scaleio-mdm1', ipaddress: "#{firstmdmip}", type: 'mdm1', box: "chef/centos-7.0", memory: "1024"},
 {hostname: 'scaleio-mdm2', ipaddress: "#{secondmdmip}", type: 'mdm2', box: "chef/centos-7.0", memory: "1024"},
 {hostname: "scaleio-gw", ipaddress: "#{network}.14", type: "gw", box: "chef/centos-7.0", memory: "512"}
 ]
 
 # Install ScaleIO cluster automatically or IM only
-clusterinstall = "True" #If True a fully working ScaleIO cluster is installed. False mean only IM is installed on node MDM1.
+clusterinstall = "True" #If True a fully working ScaleIO cluster is installed. False mean only IM is installed on node "gw".
 
-# fake device
+# 100GB fake device
 device = "/home/vagrant/scaleio1"
 
 Vagrant.configure("2") do |config|
@@ -39,9 +39,12 @@ Vagrant.configure("2") do |config|
         vb.customize ["modifyvm", :id, "--memory", "#{node[:memory]}"]
       end
       node_config.vm.network "private_network", ip: "#{node[:ipaddress]}"
+
+      # uncomment to update host
       #node_config.vm.provision "update", type: "shell", path: "scripts/update.sh"
 
       if node[:type] == "tb"
+        # download latest ScaleIO bits
         node_config.vm.provision "download", type: "shell", path: "scripts/download.sh"
       end
 
