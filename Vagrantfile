@@ -30,6 +30,10 @@ clusterinstall = "True" #If True a fully working ScaleIO cluster is installed. F
 device = "/home/vagrant/scaleio1"
 
 Vagrant.configure("2") do |config|
+  # try to enable caching to speed up package installation for second run
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.scope = :box
+  end
 
   nodes.each do |node|
     config.vm.define node[:hostname] do |node_config|
@@ -40,8 +44,8 @@ Vagrant.configure("2") do |config|
       end
       node_config.vm.network "private_network", ip: "#{node[:ipaddress]}"
 
-      # uncomment to update host
-      #node_config.vm.provision "update", type: "shell", path: "scripts/update.sh"
+      # update box
+      node_config.vm.provision "update", type: "shell", path: "scripts/update.sh"
 
       if node[:type] == "tb"
         # download latest ScaleIO bits

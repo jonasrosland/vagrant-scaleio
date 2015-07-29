@@ -64,7 +64,7 @@ if [ "${CLUSTERINSTALL}" == "True" ]; then
     truncate -s 100GB ${DEVICE}
     rpm -Uv EMC-ScaleIO-sds-*.x86_64.rpm
     MDM_IP=${FIRSTMDMIP},${SECONDMDMIP} rpm -Uv EMC-ScaleIO-sdc-*.x86_64.rpm
-    Token=${PASSWORD} rpm -Uv EMC-ScaleIO-lia-*.x86_64.rpm
+    TOKEN=${PASSWORD} rpm -Uv EMC-ScaleIO-lia-*.x86_64.rpm
   fi
 
   case ${TYPE} in
