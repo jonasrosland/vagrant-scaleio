@@ -100,7 +100,7 @@ if [ "${CLUSTERINSTALL}" == "True" ]; then
 fi
 
 # install rexray
-wget -nv https://github.com/emccode/rexraycli/releases/download/latest/rexray-Linux-x86_64 -O /bin/rexray
+wget -nv https://github.com/emccode/rexray/releases/download/latest/rexray-Linux-x86_64 -O /bin/rexray
 chmod +x /bin/rexray
 echo '[Unit]
 Description=Start Rex-RAY Service
