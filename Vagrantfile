@@ -15,12 +15,12 @@ tbip = "#{network}.13"
 
 # modifiy hostnames if required
 # "scaleio-gw" is optional, additional nodes with any box is also possible (select type: "none")
-# "chef/centos-6.6" or "chef/centos-7.0" are supported boxes, also a mixed config
+# "bento/centos-6.7" or "bento/centos-7.1" are supported boxes, also a mixed config
 nodes = [
-{hostname: "scaleio-tb", ipaddress: "#{tbip}", type: "tb", box: "chef/centos-7.0", memory: "1024"},
-{hostname: 'scaleio-mdm1', ipaddress: "#{firstmdmip}", type: 'mdm1', box: "chef/centos-7.0", memory: "1024"},
-{hostname: 'scaleio-mdm2', ipaddress: "#{secondmdmip}", type: 'mdm2', box: "chef/centos-7.0", memory: "1024"},
-{hostname: "scaleio-gw", ipaddress: "#{network}.14", type: "gw", box: "chef/centos-7.0", memory: "512"}
+{hostname: "scaleio-tb", ipaddress: "#{tbip}", type: "tb", box: "bento/centos-7.1", memory: "1024"},
+{hostname: 'scaleio-mdm1', ipaddress: "#{firstmdmip}", type: 'mdm1', box: "bento/centos-7.1", memory: "1024"},
+{hostname: 'scaleio-mdm2', ipaddress: "#{secondmdmip}", type: 'mdm2', box: "bento/centos-7.1", memory: "1024"},
+{hostname: "scaleio-gw", ipaddress: "#{network}.14", type: "gw", box: "bento/centos-7.1", memory: "512"}
 ]
 
 # Install ScaleIO cluster automatically or IM only
@@ -45,7 +45,7 @@ Vagrant.configure("2") do |config|
       node_config.vm.network "private_network", ip: "#{node[:ipaddress]}"
 
       # update box
-      node_config.vm.provision "update", type: "shell", path: "scripts/update.sh"
+      #node_config.vm.provision "update", type: "shell", path: "scripts/update.sh"
 
       if node[:type] == "tb"
         # download latest ScaleIO bits
