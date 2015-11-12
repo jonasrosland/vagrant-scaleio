@@ -23,7 +23,7 @@ To login to the ScaleIO nodes, use the following commands: ```vagrant ssh mdm1``
 
 ### Clusterinstall function
 
-In Vagrantfile there is a variable named `clusterinstall` that control how Vagrant provision ScaleIO during `vagrant up` process. If set to True (defualt) a fully functional ScaleIO cluster is installed with IM, MDM, TB, SDC, SDS on three nodes  If set to False three base VMs is installed with IM running on machined named MDM1. To install your cluster with clusterinstall=False you do `vagrant up` as usual but once complete use your webbrowser and point it to https://192.168.50.12. Login with admin and Scaleio123. From here you can deploy a new ScaleIO cluster using IM. Great for demo and learning purposes.
+In Vagrantfile there is a variable named `clusterinstall` that control how Vagrant provision ScaleIO during `vagrant up` process. If set to True (default) a fully functional ScaleIO cluster is installed with IM, MDM, TB, SDC, SDS on three nodes  If set to False three base VMs is installed with IM running on machined named MDM1. To install your cluster with clusterinstall=False you do `vagrant up` as usual but once complete use your webbrowser and point it to https://192.168.50.12. Login with admin and Scaleio123. From here you can deploy a new ScaleIO cluster using IM. Great for demo and learning purposes.
 
 
 ###Example CSV file for deployment of ScaleIO cluster using IM:

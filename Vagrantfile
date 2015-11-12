@@ -1,96 +1,62 @@
 # Created by Jonas Rosland, @virtualswede & Matt Cowger, @mcowger
 # Many thanks to this post by James Carr: http://blog.james-carr.org/2013/03/17/dynamic-vagrant-nodes/
 
-# vagrant box
-vagrantbox="centos_6.5"
-
-# vagrant box url
-vagrantboxurl="https://github.com/2creatives/vagrant-centos/releases/download/v6.5.3/centos65-x86_64-20140116.box"
-
 # scaleio admin password
 password="Scaleio123"
+
 # add your domain here
 domain = 'scaleio.local'
 
-# add your nodes here
-nodes = ['tb', 'mdm1', 'mdm2']
-
 # add your IPs here
-network = "192.168.50"
+network = "192.168.100"
+firstmdmip = "#{network}.11"
+secondmdmip = "#{network}.12"
+tbip = "#{network}.13"
 
-clusterip = "#{network}.10"
-tbip = "#{network}.11"
-firstmdmip = "#{network}.12"
-secondmdmip = "#{network}.13"
+# modifiy hostnames if required
+# "scaleio-gw" is optional, additional nodes with any box is also possible (select type: "none")
+# "bento/centos-6.7" or "bento/centos-7.1" are supported boxes, also a mixed config
+nodes = [
+{hostname: "scaleio-tb", ipaddress: "#{tbip}", type: "tb", box: "bento/centos-7.1", memory: "1024"},
+{hostname: 'scaleio-mdm1', ipaddress: "#{firstmdmip}", type: 'mdm1', box: "bento/centos-7.1", memory: "1024"},
+{hostname: 'scaleio-mdm2', ipaddress: "#{secondmdmip}", type: 'mdm2', box: "bento/centos-7.1", memory: "1024"},
+{hostname: "scaleio-gw", ipaddress: "#{network}.14", type: "gw", box: "bento/centos-7.1", memory: "512"}
+]
 
 # Install ScaleIO cluster automatically or IM only
-clusterinstall = "True" #If True a fully working ScaleIO cluster is installed. False mean only IM is installed on node MDM1.
+clusterinstall = "True" #If True a fully working ScaleIO cluster is installed. False mean only IM is installed on node "gw".
 
-# version of installation package
-version = "1.32-402.1"
-
-#OS Version of package
-os="el6"
-
-# installation folder
-siinstall = "/opt/scaleio/siinstall"
-
-# packages folder
-packages = "/opt/scaleio/siinstall/ECS/packages"
-# package name, was ecs for 1.21, is now EMC-ScaleIO from 1.30
-packagename = "EMC-ScaleIO"
-
-# fake device
+# 100GB fake device
 device = "/home/vagrant/scaleio1"
 
-# loop through the nodes and set hostname
-scaleio_nodes = []
-subnet=10
-nodes.each { |node_name|
-  (1..1).each {|n|
-    subnet += 1
-    scaleio_nodes << {:hostname => "#{node_name}"}
-  }
-}
-
 Vagrant.configure("2") do |config|
-  if Vagrant.has_plugin?("vagrant-proxyconf")
-    #config.proxy.http     = "http://proxy.example.com:3128/"
-    #config.proxy.https    = "http://proxy.example.com:3128/"
-    #config.proxy.no_proxy = "localhost,127.0.0.1,.example.com"
+  # try to enable caching to speed up package installation for second run
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.scope = :box
   end
-  scaleio_nodes.each do |node|
+
+  nodes.each do |node|
     config.vm.define node[:hostname] do |node_config|
-      node_config.vm.box = "#{vagrantbox}"
-      node_config.vm.box_url = "#{vagrantboxurl}"
+      node_config.vm.box = "#{node[:box]}"
       node_config.vm.host_name = "#{node[:hostname]}.#{domain}"
       node_config.vm.provider :virtualbox do |vb|
-        vb.customize ["modifyvm", :id, "--memory", "1024"]
+        vb.customize ["modifyvm", :id, "--memory", "#{node[:memory]}"]
       end
-      if node[:hostname] == "tb"
-        node_config.vm.network "private_network", ip: "#{tbip}"
-        node_config.vm.provision "shell" do |s|
-          s.path = "scripts/tb.sh"
-          s.args   = "-o #{os} -v #{version} -n #{packagename} -d #{device} -f #{firstmdmip} -s #{secondmdmip} -i #{siinstall} -c #{clusterinstall}"
-        end
+      node_config.vm.network "private_network", ip: "#{node[:ipaddress]}"
+
+      # update box
+      #node_config.vm.provision "update", type: "shell", path: "scripts/update.sh"
+
+      if node[:type] == "tb"
+        # download latest ScaleIO bits
+        node_config.vm.provision "download", type: "shell", path: "scripts/download.sh"
       end
 
-      if node[:hostname] == "mdm1"
-        node_config.vm.network "private_network", ip: "#{firstmdmip}"
-        node_config.vm.network "forwarded_port", guest: 6611, host: 6611
-        node_config.vm.provision "shell" do |s|
-          s.path = "scripts/mdm1.sh"
-          s.args   = "-o #{os} -v #{version} -n #{packagename} -d #{device} -f #{firstmdmip} -s #{secondmdmip} -i #{siinstall} -p #{password} -c #{clusterinstall}"
-        end
+      node_config.vm.provision "shell" do |s|
+        s.path = "scripts/install.sh"
+        s.args   = "-d #{device} -f #{firstmdmip} -s #{secondmdmip} -t #{tbip} -p #{password} -c #{clusterinstall} -n #{node[:type]}"
       end
 
-      if node[:hostname] == "mdm2"
-        node_config.vm.network "private_network", ip: "#{secondmdmip}"
-        node_config.vm.provision "shell" do |s|
-          s.path = "scripts/mdm2.sh"
-          s.args   = "-o #{os} -v #{version} -n #{packagename} -d #{device} -f #{firstmdmip} -s #{secondmdmip} -i #{siinstall} -t #{tbip} -p #{password} -c #{clusterinstall}"
-        end
-      end
     end
   end
 end
