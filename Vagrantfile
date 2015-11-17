@@ -2,10 +2,10 @@
 # Many thanks to this post by James Carr: http://blog.james-carr.org/2013/03/17/dynamic-vagrant-nodes/
 
 # vagrant box
-vagrantbox="centos_6.5"
+vagrantbox="boxcutter/centos71"
 
 # vagrant box url
-vagrantboxurl="https://github.com/2creatives/vagrant-centos/releases/download/v6.5.3/centos65-x86_64-20140116.box"
+#vagrantboxurl="https://github.com/2creatives/vagrant-centos/releases/download/v6.5.3/centos65-x86_64-20140116.box"
 
 # scaleio admin password
 password="Scaleio123"
@@ -30,7 +30,7 @@ clusterinstall = "True" #If True a fully working ScaleIO cluster is installed. F
 version = "1.32-402.1"
 
 #OS Version of package
-os="el6"
+os="el7"
 
 # installation folder
 siinstall = "/opt/scaleio/siinstall"
@@ -42,6 +42,17 @@ packagename = "EMC-ScaleIO"
 
 # fake device
 device = "/home/vagrant/scaleio1"
+
+# REX-ray download
+download_rexraycli = "https://github.com/emccode/rexraycli/releases/download/latest/rexray-Linux-x86_64"
+
+if download_rexraycli != ""
+  perform_rexraycli_download = <<-EOF
+    echo 'Performing 10MB download of Rexraycli'
+    wget -nv #{download_rexraycli} -O /bin/rexray
+    chmod +x /bin/rexray
+  EOF
+end
 
 # loop through the nodes and set hostname
 scaleio_nodes = []
@@ -62,10 +73,9 @@ Vagrant.configure("2") do |config|
   scaleio_nodes.each do |node|
     config.vm.define node[:hostname] do |node_config|
       node_config.vm.box = "#{vagrantbox}"
-      node_config.vm.box_url = "#{vagrantboxurl}"
       node_config.vm.host_name = "#{node[:hostname]}.#{domain}"
       node_config.vm.provider :virtualbox do |vb|
-        vb.customize ["modifyvm", :id, "--memory", "1024"]
+        vb.customize ["modifyvm", :id, "--memory", "2048"]
       end
       if node[:hostname] == "tb"
         node_config.vm.network "private_network", ip: "#{tbip}"
